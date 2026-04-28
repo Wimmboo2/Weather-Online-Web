@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+ï»¿import { useEffect, useMemo, useState } from 'react';
 import { MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import {
@@ -104,6 +104,10 @@ export default function App() {
   };
 
   const fetchByCoords = async (lat, lon, useReverse = true) => {
+    // Coordinate-driven selection should behave as map mode so we don't
+    // accidentally re-query by the reverse-geocoded label string.
+    setMode('map');
+
     setLoading(true);
     setError('');
 
@@ -185,11 +189,14 @@ export default function App() {
               type="text"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Type a city name..."
+              placeholder={mode === 'search' ? 'Type a city name...' : 'Click on the map to pick a location'}
+              readOnly={mode === 'map'}
               className="w-full rounded-xl border border-white/20 bg-black/30 px-4 py-3 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-cyan-300"
             />
             <p className="mt-2 text-xs text-white/75">
-              Debounced search runs automatically after you stop typing.
+              {mode === 'search'
+                ? 'Debounced search runs automatically after you stop typing.'
+                : 'Map mode: click anywhere on the map to update weather and marker.'}
             </p>
           </div>
         </header>
@@ -205,7 +212,6 @@ export default function App() {
                 marker={marker}
                 center={mapCenter}
                 onMapClick={(lat, lon) => {
-                  setMode('map');
                   fetchByCoords(lat, lon, true);
                 }}
               />
@@ -236,8 +242,8 @@ export default function App() {
                 </div>
 
                 <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                  <div className="rounded-xl bg-black/25 p-3">Temp: {Math.round(weather.main.temp)}°C</div>
-                  <div className="rounded-xl bg-black/25 p-3">Feels: {Math.round(weather.main.feels_like)}°C</div>
+                  <div className="rounded-xl bg-black/25 p-3">Temp: {Math.round(weather.main.temp)}Â°C</div>
+                  <div className="rounded-xl bg-black/25 p-3">Feels: {Math.round(weather.main.feels_like)}Â°C</div>
                   <div className="rounded-xl bg-black/25 p-3">Humidity: {weather.main.humidity}%</div>
                   <div className="rounded-xl bg-black/25 p-3">Wind: {weather.wind.speed} m/s</div>
                 </div>
@@ -252,7 +258,7 @@ export default function App() {
                     <div key={day.date} className="rounded-xl bg-black/25 p-3">
                       <p className="font-semibold">{formatDay(day.date)}</p>
                       <p className="capitalize text-sm text-white/80">{day.description}</p>
-                      <p className="text-sm">H: {day.max}°C / L: {day.min}°C</p>
+                      <p className="text-sm">H: {day.max}Â°C / L: {day.min}Â°C</p>
                     </div>
                   ))}
                 </div>

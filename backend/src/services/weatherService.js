@@ -4,9 +4,13 @@ const API_KEY = process.env.OPENWEATHER_API_KEY;
 const WEATHER_BASE = 'https://api.openweathermap.org/data/2.5';
 const GEO_BASE = 'https://api.openweathermap.org/geo/1.0';
 
-if (!API_KEY) {
-  console.warn('OPENWEATHER_API_KEY is missing. Requests will fail until set.');
-}
+const assertApiKey = () => {
+  if (!API_KEY) {
+    const error = new Error('Server is missing OPENWEATHER_API_KEY.');
+    error.status = 500;
+    throw error;
+  }
+};
 
 const openWeather = axios.create({ timeout: 12000 });
 
@@ -19,6 +23,7 @@ const throwIfMissingData = (data, fallback = 'Invalid location') => {
 };
 
 const currentByCity = async (city) => {
+  assertApiKey();
   const response = await openWeather.get(`${WEATHER_BASE}/weather`, {
     params: { q: city, appid: API_KEY, units: 'metric' }
   });
@@ -26,6 +31,7 @@ const currentByCity = async (city) => {
 };
 
 const forecastByCity = async (city) => {
+  assertApiKey();
   const response = await openWeather.get(`${WEATHER_BASE}/forecast`, {
     params: { q: city, appid: API_KEY, units: 'metric' }
   });
@@ -33,6 +39,7 @@ const forecastByCity = async (city) => {
 };
 
 const currentByCoords = async (lat, lon) => {
+  assertApiKey();
   const response = await openWeather.get(`${WEATHER_BASE}/weather`, {
     params: { lat, lon, appid: API_KEY, units: 'metric' }
   });
@@ -40,6 +47,7 @@ const currentByCoords = async (lat, lon) => {
 };
 
 const forecastByCoords = async (lat, lon) => {
+  assertApiKey();
   const response = await openWeather.get(`${WEATHER_BASE}/forecast`, {
     params: { lat, lon, appid: API_KEY, units: 'metric' }
   });
@@ -47,6 +55,7 @@ const forecastByCoords = async (lat, lon) => {
 };
 
 const reverseByCoords = async (lat, lon) => {
+  assertApiKey();
   const response = await openWeather.get(`${GEO_BASE}/reverse`, {
     params: { lat, lon, limit: 1, appid: API_KEY }
   });
