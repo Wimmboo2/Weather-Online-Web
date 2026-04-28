@@ -303,7 +303,6 @@ export default function App() {
         <header className="glass-card top-card">
           <div className="title-row">
             <div>
-              <p className="meta-line">Atmospheric Journal</p>
               <h1 className="hero-title">Weather Online Web</h1>
             </div>
             <div className="mode-pill-wrap">
@@ -342,9 +341,6 @@ export default function App() {
 
         <section className="content-split">
           <article className="glass-card map-card">
-            <div className="map-heading">
-              <p className="meta-line">Interactive Atlas</p>
-            </div>
             <div className="map-wrap">
               <MapContainer center={[mapCenter.lat, mapCenter.lon]} zoom={5} scrollWheelZoom className="h-full w-full">
                 <TileLayer
