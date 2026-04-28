@@ -10,7 +10,12 @@ const app = express();
 
 app.use(express.json());
 
-const allowedOrigin = process.env.FRONTEND_URL;
+const allowedOrigins = new Set(
+  (process.env.FRONTEND_URL || '')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean)
+);
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -18,7 +23,14 @@ app.use(
         return callback(null, true);
       }
 
-      if (origin === allowedOrigin) {
+      // Allow one or more explicitly configured frontend origins.
+      // Example: FRONTEND_URL=https://app.vercel.app,https://app-git-branch.vercel.app
+      if (allowedOrigins.size === 0) {
+        console.warn('FRONTEND_URL is not set; allowing all origins.');
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.has(origin)) {
         return callback(null, true);
       }
 

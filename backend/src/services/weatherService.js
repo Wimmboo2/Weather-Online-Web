@@ -5,7 +5,14 @@ const WEATHER_BASE = 'https://api.openweathermap.org/data/2.5';
 const GEO_BASE = 'https://api.openweathermap.org/geo/1.0';
 
 const assertApiKey = () => {
-  if (!API_KEY) {
+  const key = (API_KEY || '').trim();
+  const looksPlaceholder =
+    key.length === 0 ||
+    key.toLowerCase().includes('your_openweathermap_api_key') ||
+    key.toLowerCase().includes('your_api_key') ||
+    key.toLowerCase().includes('placeholder');
+
+  if (looksPlaceholder) {
     const error = new Error('Server is missing OPENWEATHER_API_KEY.');
     error.status = 500;
     throw error;

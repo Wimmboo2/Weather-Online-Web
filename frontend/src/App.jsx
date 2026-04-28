@@ -223,7 +223,11 @@ export default function App() {
       ]);
       applyWeather(currentRes, forecastRes, currentRes.data.name);
     } catch (err) {
-      setError(err.response?.data?.message || 'Unable to fetch weather for that city.');
+      if (!err.response) {
+        setError('Cannot reach the backend. Check VITE_API_URL, CORS (FRONTEND_URL), and that the backend is running.');
+      } else {
+        setError(err.response?.data?.message || 'Unable to fetch weather for that city.');
+      }
     } finally {
       setLoading(false);
     }
@@ -244,7 +248,11 @@ export default function App() {
       const label = reverseRes.data?.name || currentRes.data?.name;
       applyWeather(currentRes, forecastRes, label);
     } catch (err) {
-      setError(err.response?.data?.message || 'Unable to fetch weather for that location.');
+      if (!err.response) {
+        setError('Cannot reach the backend. Check VITE_API_URL, CORS (FRONTEND_URL), and that the backend is running.');
+      } else {
+        setError(err.response?.data?.message || 'Unable to fetch weather for that location.');
+      }
     } finally {
       setLoading(false);
     }
