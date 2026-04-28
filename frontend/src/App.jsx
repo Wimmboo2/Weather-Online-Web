@@ -226,7 +226,14 @@ export default function App() {
       if (!err.response) {
         setError('Cannot reach the backend. Check VITE_API_URL, CORS (FRONTEND_URL), and that the backend is running.');
       } else {
-        setError(err.response?.data?.message || 'Unable to fetch weather for that city.');
+        const status = err.response?.status;
+        const requestUrl = err.config?.url || '';
+        // If VITE_API_URL is missing/wrong, requests hit the Vercel site and return 404.
+        if (status === 404 && requestUrl.includes('/api/weather/')) {
+          setError('API URL misconfigured: this request is hitting the frontend (404). Set VITE_API_URL in Vercel to your Railway backend URL (including https) and redeploy.');
+        } else {
+          setError(err.response?.data?.message || 'Unable to fetch weather for that city.');
+        }
       }
     } finally {
       setLoading(false);
@@ -251,7 +258,13 @@ export default function App() {
       if (!err.response) {
         setError('Cannot reach the backend. Check VITE_API_URL, CORS (FRONTEND_URL), and that the backend is running.');
       } else {
-        setError(err.response?.data?.message || 'Unable to fetch weather for that location.');
+        const status = err.response?.status;
+        const requestUrl = err.config?.url || '';
+        if (status === 404 && requestUrl.includes('/api/weather/')) {
+          setError('API URL misconfigured: this request is hitting the frontend (404). Set VITE_API_URL in Vercel to your Railway backend URL (including https) and redeploy.');
+        } else {
+          setError(err.response?.data?.message || 'Unable to fetch weather for that location.');
+        }
       }
     } finally {
       setLoading(false);
