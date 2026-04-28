@@ -19,6 +19,110 @@ L.Icon.Default.mergeOptions({
 
 const DEFAULT_CENTER = { lat: 20, lon: 0 };
 
+const markerIcon = new L.DivIcon({
+  className: 'drop-marker-wrap',
+  html: '<span class="drop-marker"></span>',
+  iconSize: [28, 28],
+  iconAnchor: [14, 28]
+});
+
+function CountUp({ value, suffix = '', duration = 800 }) {
+  const [display, setDisplay] = useState(0);
+
+  useEffect(() => {
+    const target = Number(value) || 0;
+    const steps = 24;
+    const interval = Math.max(20, Math.floor(duration / steps));
+    let currentStep = 0;
+
+    const timer = setInterval(() => {
+      currentStep += 1;
+      const progress = Math.min(1, currentStep / steps);
+      setDisplay(Math.round(target * progress));
+      if (progress >= 1) {
+        clearInterval(timer);
+      }
+    }, interval);
+
+    return () => clearInterval(timer);
+  }, [value, duration]);
+
+  return (
+    <span>
+      {display}
+      {suffix}
+    </span>
+  );
+}
+
+function WeatherGlyph({ condition }) {
+  const c = (condition || '').toLowerCase();
+
+  if (c.includes('rain') || c.includes('drizzle') || c.includes('thunderstorm')) {
+    return (
+      <svg viewBox="0 0 180 120" className="glyph glyph-rain" aria-hidden="true">
+        <g className="cloud-group">
+          <ellipse cx="72" cy="48" rx="30" ry="18" />
+          <ellipse cx="102" cy="46" rx="28" ry="16" />
+          <ellipse cx="88" cy="36" rx="24" ry="15" />
+        </g>
+        <g className="rain-lines">
+          <line x1="60" y1="68" x2="52" y2="92" />
+          <line x1="80" y1="70" x2="72" y2="96" />
+          <line x1="100" y1="68" x2="92" y2="94" />
+          <line x1="120" y1="70" x2="112" y2="97" />
+        </g>
+      </svg>
+    );
+  }
+
+  if (c.includes('snow')) {
+    return (
+      <svg viewBox="0 0 180 120" className="glyph glyph-snow" aria-hidden="true">
+        <g className="cloud-group">
+          <ellipse cx="72" cy="48" rx="30" ry="18" />
+          <ellipse cx="102" cy="46" rx="28" ry="16" />
+          <ellipse cx="88" cy="36" rx="24" ry="15" />
+        </g>
+        <g className="snow-dots">
+          <circle cx="62" cy="86" r="3" />
+          <circle cx="82" cy="92" r="3" />
+          <circle cx="102" cy="88" r="3" />
+          <circle cx="122" cy="94" r="3" />
+        </g>
+      </svg>
+    );
+  }
+
+  if (c.includes('cloud')) {
+    return (
+      <svg viewBox="0 0 180 120" className="glyph glyph-cloud" aria-hidden="true">
+        <g className="cloud-group drift">
+          <ellipse cx="72" cy="58" rx="30" ry="18" />
+          <ellipse cx="102" cy="56" rx="28" ry="16" />
+          <ellipse cx="88" cy="46" rx="24" ry="15" />
+        </g>
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 180 120" className="glyph glyph-sun" aria-hidden="true">
+      <g className="sun-rays">
+        <line x1="90" y1="16" x2="90" y2="34" />
+        <line x1="90" y1="80" x2="90" y2="98" />
+        <line x1="56" y1="32" x2="68" y2="44" />
+        <line x1="112" y1="76" x2="124" y2="88" />
+        <line x1="42" y1="60" x2="60" y2="60" />
+        <line x1="120" y1="60" x2="138" y2="60" />
+        <line x1="56" y1="88" x2="68" y2="76" />
+        <line x1="112" y1="44" x2="124" y2="32" />
+      </g>
+      <circle cx="90" cy="60" r="22" className="sun-core" />
+    </svg>
+  );
+}
+
 function MapSync({ marker, onMapClick, center }) {
   const map = useMapEvents({
     click: (event) => {
@@ -30,20 +134,42 @@ function MapSync({ marker, onMapClick, center }) {
     map.flyTo([center.lat, center.lon], 8, { duration: 0.8 });
   }, [center, map]);
 
-  return marker ? <Marker position={[marker.lat, marker.lon]} /> : null;
+  return marker ? (
+    <Marker
+      key={marker.key}
+      position={[marker.lat, marker.lon]}
+      icon={markerIcon}
+    />
+  ) : null;
 }
 
 function LoadingSkeleton() {
   return (
-    <div className="space-y-4 rounded-2xl bg-black/20 p-6 backdrop-blur-sm">
-      <div className="h-8 w-1/3 animate-pulseSlow rounded bg-white/30" />
-      <div className="h-20 w-full animate-pulseSlow rounded bg-white/20" />
-      <div className="grid grid-cols-2 gap-3">
-        <div className="h-16 animate-pulseSlow rounded bg-white/20" />
-        <div className="h-16 animate-pulseSlow rounded bg-white/20" />
+    <div className="glass-card p-6">
+      <div className="skeleton h-7 w-44" />
+      <div className="mt-3 skeleton h-20 w-full" />
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <div className="skeleton h-16" />
+        <div className="skeleton h-16" />
       </div>
     </div>
   );
+}
+
+function MoodDecor({ weatherMain }) {
+  const c = (weatherMain || '').toLowerCase();
+
+  if (c.includes('rain')) {
+    return <div className="mood-decor mood-rain" aria-hidden="true" />;
+  }
+  if (c.includes('clear')) {
+    return <div className="mood-decor mood-sun" aria-hidden="true" />;
+  }
+  if (c.includes('cloud')) {
+    return <div className="mood-decor mood-cloud" aria-hidden="true" />;
+  }
+
+  return <div className="mood-decor mood-default" aria-hidden="true" />;
 }
 
 export default function App() {
@@ -74,7 +200,7 @@ export default function App() {
 
     const lat = current.coord.lat;
     const lon = current.coord.lon;
-    setMarker({ lat, lon });
+    setMarker({ lat, lon, key: `${lat}-${lon}-${Date.now()}` });
     setMapCenter({ lat, lon });
 
     const resolvedLabel = nextLabel || current.name || `${lat.toFixed(2)}, ${lon.toFixed(2)}`;
@@ -104,10 +230,7 @@ export default function App() {
   };
 
   const fetchByCoords = async (lat, lon, useReverse = true) => {
-    // Coordinate-driven selection should behave as map mode so we don't
-    // accidentally re-query by the reverse-geocoded label string.
     setMode('map');
-
     setLoading(true);
     setError('');
 
@@ -158,113 +281,147 @@ export default function App() {
     return getWeatherClass(weather?.weather?.[0]?.main, weather?.weather?.[0]?.icon);
   }, [weather]);
 
-  return (
-    <main className={`min-h-screen transition-all duration-500 ${weatherClass}`}>
-      <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 p-4 md:p-8">
-        <header className="rounded-2xl bg-black/20 p-5 backdrop-blur-sm">
-          <h1 className="text-3xl font-bold">Weather Online Web</h1>
-          <p className="mt-1 text-sm text-white/80">Search by city or click anywhere on the map.</p>
+  const timestamp = useMemo(() => {
+    const now = new Date();
+    return now.toLocaleString(undefined, {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }, [weather]);
 
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <button
-              onClick={() => setMode('search')}
-              className={`rounded-full px-4 py-2 text-sm font-semibold ${
-                mode === 'search' ? 'bg-white text-slate-900' : 'bg-black/30 text-white'
-              }`}
-            >
-              Search Bar
-            </button>
-            <button
-              onClick={() => setMode('map')}
-              className={`rounded-full px-4 py-2 text-sm font-semibold ${
-                mode === 'map' ? 'bg-white text-slate-900' : 'bg-black/30 text-white'
-              }`}
-            >
-              Interactive Map
-            </button>
+  return (
+    <main className={`app-shell ${weatherClass}`}>
+      <div className="grain" aria-hidden="true" />
+      <div className="lava" aria-hidden="true" />
+      <div className="watercolor-blob" aria-hidden="true" />
+      <MoodDecor weatherMain={weather?.weather?.[0]?.main} />
+
+      <div className="page-wrap">
+        <header className="glass-card top-card">
+          <div className="title-row">
+            <div>
+              <p className="meta-line">Atmospheric Journal</p>
+              <h1 className="hero-title">Weather Online Web</h1>
+            </div>
+            <div className="mode-pill-wrap">
+              <button
+                onClick={() => setMode('search')}
+                className={`mode-pill ${mode === 'search' ? 'active' : ''}`}
+              >
+                Search
+              </button>
+              <button
+                onClick={() => setMode('map')}
+                className={`mode-pill ${mode === 'map' ? 'active' : ''}`}
+              >
+                Map
+              </button>
+            </div>
           </div>
 
-          <div className="mt-4">
+          <div className="search-row">
             <input
               type="text"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder={mode === 'search' ? 'Type a city name...' : 'Click on the map to pick a location'}
               readOnly={mode === 'map'}
-              className="w-full rounded-xl border border-white/20 bg-black/30 px-4 py-3 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-cyan-300"
+              className="search-input"
             />
-            <p className="mt-2 text-xs text-white/75">
-              {mode === 'search'
-                ? 'Debounced search runs automatically after you stop typing.'
-                : 'Map mode: click anywhere on the map to update weather and marker.'}
-            </p>
+            <div className={`mode-hint mode-search ${mode === 'search' ? 'show' : ''}`}>
+              Debounced search is active.
+            </div>
+            <div className={`mode-hint mode-map ${mode === 'map' ? 'show' : ''}`}>
+              Click anywhere on the map to fetch weather.
+            </div>
           </div>
         </header>
 
-        <section className="grid flex-1 grid-cols-1 gap-6 lg:grid-cols-2">
-          <div className="h-[420px] overflow-hidden rounded-2xl border border-white/20 bg-black/20 backdrop-blur-sm lg:h-full">
-            <MapContainer center={[mapCenter.lat, mapCenter.lon]} zoom={5} scrollWheelZoom className="h-full w-full">
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-              <MapSync
-                marker={marker}
-                center={mapCenter}
-                onMapClick={(lat, lon) => {
-                  fetchByCoords(lat, lon, true);
-                }}
-              />
-            </MapContainer>
-          </div>
+        <section className="content-split">
+          <article className="glass-card map-card">
+            <div className="map-heading">
+              <p className="meta-line">Interactive Atlas</p>
+            </div>
+            <div className="map-wrap">
+              <MapContainer center={[mapCenter.lat, mapCenter.lon]} zoom={5} scrollWheelZoom className="h-full w-full">
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                <MapSync
+                  marker={marker}
+                  center={mapCenter}
+                  onMapClick={(lat, lon) => {
+                    fetchByCoords(lat, lon, true);
+                  }}
+                />
+              </MapContainer>
+            </div>
+          </article>
 
-          <div className="space-y-4">
+          <article className="stack-col">
             {loading && <LoadingSkeleton />}
 
             {!loading && error && (
-              <div className="rounded-2xl border border-red-300/30 bg-red-500/20 p-4 text-sm text-red-100">
-                {error}
-              </div>
+              <div className="glass-card error-card">{error}</div>
             )}
 
             {!loading && weather && (
-              <div className="rounded-2xl bg-black/20 p-6 backdrop-blur-sm">
-                <div className="flex items-start justify-between gap-4">
+              <div key={weather.dt} className="glass-card weather-card reveal-card">
+                <div className="weather-top">
                   <div>
-                    <h2 className="text-2xl font-bold">{weather.name}</h2>
-                    <p className="capitalize text-white/80">{weather.weather[0].description}</p>
+                    <p className="meta-line">{timestamp}</p>
+                    <h2 className="location-line">{weather.name}</h2>
+                    <p className="hand-label">{weather.weather[0].description}</p>
                   </div>
-                  <img
-                    src={`https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`}
-                    alt={weather.weather[0].description}
-                    className="h-20 w-20"
-                  />
+                  <WeatherGlyph condition={weather.weather[0].main} />
                 </div>
 
-                <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                  <div className="rounded-xl bg-black/25 p-3">Temp: {Math.round(weather.main.temp)}°C</div>
-                  <div className="rounded-xl bg-black/25 p-3">Feels: {Math.round(weather.main.feels_like)}°C</div>
-                  <div className="rounded-xl bg-black/25 p-3">Humidity: {weather.main.humidity}%</div>
-                  <div className="rounded-xl bg-black/25 p-3">Wind: {weather.wind.speed} m/s</div>
+                <div className="temp-line">
+                  <CountUp value={Math.round(weather.main.temp)} suffix="°C" />
+                </div>
+
+                <div className="stats-grid">
+                  <div className="stat-card offset-a">
+                    <p className="stat-label">Feels Like</p>
+                    <p className="stat-value"><CountUp value={Math.round(weather.main.feels_like)} suffix="°C" /></p>
+                  </div>
+                  <div className="stat-card offset-b">
+                    <p className="stat-label">Humidity</p>
+                    <p className="stat-value"><CountUp value={weather.main.humidity} suffix="%" /></p>
+                  </div>
+                  <div className="stat-card offset-c">
+                    <p className="stat-label">Wind</p>
+                    <p className="stat-value"><CountUp value={Math.round(weather.wind.speed * 10)} suffix=" km/h" /></p>
+                  </div>
+                  <div className="stat-card offset-d">
+                    <p className="stat-label">Condition</p>
+                    <p className="stat-value">{weather.weather[0].main}</p>
+                  </div>
                 </div>
               </div>
             )}
 
             {!loading && forecast.length > 0 && (
-              <div className="rounded-2xl bg-black/20 p-6 backdrop-blur-sm">
-                <h3 className="mb-3 text-lg font-semibold">5-Day Forecast</h3>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="glass-card forecast-card">
+                <div className="forecast-head">
+                  <p className="meta-line">5-Day Film Strip</p>
+                </div>
+                <div className="forecast-strip">
                   {forecast.map((day) => (
-                    <div key={day.date} className="rounded-xl bg-black/25 p-3">
-                      <p className="font-semibold">{formatDay(day.date)}</p>
-                      <p className="capitalize text-sm text-white/80">{day.description}</p>
-                      <p className="text-sm">H: {day.max}°C / L: {day.min}°C</p>
+                    <div key={day.date} className="forecast-frame">
+                      <p className="forecast-day">{formatDay(day.date)}</p>
+                      <p className="forecast-desc">{day.description}</p>
+                      <p className="forecast-temp">{day.max}° / {day.min}°</p>
                     </div>
                   ))}
                 </div>
               </div>
             )}
-          </div>
+          </article>
         </section>
       </div>
     </main>
